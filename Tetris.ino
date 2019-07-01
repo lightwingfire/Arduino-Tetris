@@ -20,19 +20,25 @@ const int joyDown = 2;
 const int joyLeft = A1;
 const int joyRight = A0;
 
-int iBoard[18][4];
-int gBoard[11][40];
-int block[11][40];
-int pile[11][40];
-int tPoint[11][40];
+uint8_t iBoard[18][4];
+uint8_t gBoard[11][40];
+uint8_t block[11][40];
+uint8_t pile[11][40];
+uint8_t tPoint[11][40];
 bool del[22];
-int newPlace[11][40];
-int aBoard[11][60];
-int shuffle[] = { 1, 2, 3, 4, 5, 6, 7 };
+uint8_t newPlace[11][40];
+uint8_t aBoard[11][60];
+uint8_t ghBoard[11][40];
+uint8_t pQueque[9];
+uint8_t shuffle[] = { 1, 2, 3, 4, 5, 6, 7 };
 
 long delay_ = 0;
 long delayAnimation = 0;
 long delayAnimationDeath = 0;
+long delayAnimationLineClear = 0;
+long delayNewBlock = 0;
+
+
 int delayLevel = 1000;
 int coolDown = 0;
 int coolDownDeath = 0;
@@ -48,6 +54,7 @@ int currentScore = 0;
 int currentLevel = 1;
 
 bool go = true;
+bool animationClearLatch = false;
 bool stickyLeft = true;
 bool stickyRight = true;
 bool stickyHold = true;
@@ -92,13 +99,37 @@ void shuffleDeck()
 int nextPiece()
 {
     nextP++;
+    if (nextP == 8)
+    {
+        shuffleDeck();
+        for (int x = 0; x < 7; x++)
+        {
+            pQueque[x] = shuffle[x];
+        }
+        nextP = 0;
+    }
+    if (nextP == 3)
+    {
+        shuffleDeck();
+        for (int x = 0; x < 6; x++)
+        {
+            pQueque[x+3] = shuffle[x];
+        }
+        nextP = 0;
+    }
+    for (int x = 0; x < 6; x++)
+    {
+        pQueque[x] = pQueque[x + 1];
+    }
+    return pQueque[0];
+    /*nextP++;
     if (nextP > 6)
     {
         shuffleDeck();
         nextP = 0;
     }
     //Serial.println(nextP);
-    return shuffle[nextP];
+    return shuffle[nextP];*/
 
 }
 void hold()
@@ -133,7 +164,7 @@ void newBlock()
         piece(nextPiece());
         go = false;
     }
-    if (!(canDown()) && !(stick()))
+    if (delayNewBlock < millis())
     {
         stickyHeld = true;
         for (int y = 0; y <= 21; y++)
@@ -414,6 +445,7 @@ void hardDrop()
     {
         moveDown(false);
     }
+    delayNewBlock = delayNewBlock - 500;
 }
 
 bool canDown()
@@ -479,25 +511,48 @@ bool canRight()
     }
     return true;
 }
+
 void ghostP()
 {
-    /* for (int y = 0; y <= 25; y++)
+    int dist = -1;
+    for (int y = 0; y <= 25; y++)
+    {
+        for (int x = 0; x <= 9; x++)
+        {
+            ghBoard[x][y] = 0;
+        }
+    }
+
+     for (int y = 0; y <= 25; y++)
      {
          for (int x = 0; x <= 9; x++)
          {
              if (block[x][y] > 0)
              {
-                 for (int z = 25; z > 0; z--)
+                 for (int z = 0; z < 25; z++)
                  {
                      if (pile[x][z] > 0)
                      {
-                         aBoard[x][z + 1] = 9;
+                        if((z) > dist)
+                        {
+                            dist = z;
+                        }
                      }
                  }
              }
          }
      }
-     Serial.println("ghost");*/
+    for (int y = 0; y <= 25; y++)
+    {
+        for (int x = 0; x <= 9; x++)
+        {
+            if (block[x][y] > 0)
+            {
+                ghBoard[x][dist+1] = 9;
+            }
+        }
+    }
+            Serial.println(dist);
 }
 uint16_t XY(uint8_t x, uint8_t y)
 {
@@ -518,7 +573,7 @@ void GameB()
     {
         for (int x = 0; x <= 9; x++)
         {
-            gBoard[x][y] = (block[x][y]) | (pile[x][y] | (aBoard[x][y]));
+            gBoard[x][y] = (block[x][y]) | (pile[x][y] | (aBoard[x][y]) | (ghBoard[x][y]));
         }
     }
 
@@ -642,8 +697,9 @@ void holdI()
 void nextPI(int r)
 {
     //Serial.println("preview");
-    int preview = shuffle[nextP + r + 1];
-    r = 10 - 4*r;
+    //int preview = shuffle[nextP + r + 1];
+    int preview = pQueque[r + 1];
+    r = 9 - 4*r;
     for (int y = 0; y <= 3; y++)
     {
         for (int x = r; x <= (3 + r); x++)
@@ -707,8 +763,8 @@ void InfoB()
 {
     holdI();
     nextPI(0);
-    //nextPI(1);
-    //nextPI(2);
+    nextPI(1);
+    nextPI(2);
 
     for (int y = 0; y <= 3; y++)
     {
@@ -770,7 +826,7 @@ void InfoB()
 
 void clearTest()
 {
-    ;
+    
     int t = 0;
     bool g = false;
     if (gameOverTest())
@@ -787,6 +843,7 @@ void clearTest()
                 {
                     del[y] = true;
                     g = true;
+                    animationLineClear(y);
 
                 }
 
@@ -926,7 +983,25 @@ void timing()
             coolDownDeath--;
         }
     }
+    if (canDown() || stick())
+    {
+        delayNewBlock = millis() + 500;
+    }
+    if((delayAnimationLineClear < millis()) && (animationClearLatch))
+    {
+        clearLine();
+        animationClearLatch = false;
+        for (int y = 0; y <= 25; y++)
+        {
+            for (int x = 0; x <= 9; x++)
+            {
+                aBoard[x][y] = 0;
+            }
+        }
+        
+    }
 }
+
 void loop()
 {
     buttons();
@@ -934,10 +1009,11 @@ void loop()
     if (start)
     {
         newBlock();
+        ghostP();
         stick();
         score(0, 0);
-        GameB();
         InfoB();
+        GameB();
         clearTest();
 
     }
@@ -952,6 +1028,7 @@ void loop()
     FastLED.clear();
     delay(30);
 }
+
 void rotate(bool turn)
 {
     int xSpin = 0;
@@ -1248,6 +1325,7 @@ void rotate(bool turn)
     }
 
 }
+
 void animationScroll()
 {
 
@@ -1531,4 +1609,14 @@ void animationDeath()
     }
 
 
+}
+void animationLineClear(int y)
+{
+    delayAnimationLineClear = millis() + 150;
+    animationClearLatch = true;
+    for(int x = 0; x<= 9; x++)
+    {
+        aBoard[x][y] = 9;
+    }
+    //clearLine();
 }
