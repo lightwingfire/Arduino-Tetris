@@ -29,7 +29,7 @@ bool del[22];
 uint8_t newPlace[11][40];
 uint8_t aBoard[11][60];
 uint8_t ghBoard[11][40];
-uint8_t pQueque[9];
+uint8_t pQueque[16];
 uint8_t shuffle[] = { 1, 2, 3, 4, 5, 6, 7 };
 
 long delay_ = 0;
@@ -48,6 +48,13 @@ int nextP = 7;
 int pieceC = 0;
 int currentRot = 0;
 int held = 0;
+
+int xSpin = 0;
+int ySpin = 0;
+bool cturn;
+bool rotated = false;
+int xOffset = 0;
+int yOffset = 0;
 
 int currentLine = 0;
 int currentScore = 0;
@@ -102,7 +109,7 @@ int nextPiece()
     if (nextP == 8)
     {
         shuffleDeck();
-        for (int x = 0; x < 7; x++)
+        for (int x = 0; x <= 7; x++)
         {
             pQueque[x] = shuffle[x];
         }
@@ -111,13 +118,13 @@ int nextPiece()
     if (nextP == 3)
     {
         shuffleDeck();
-        for (int x = 0; x < 6; x++)
+        for (int x = 0; x <= 7; x++)
         {
             pQueque[x+3] = shuffle[x];
         }
         nextP = 0;
     }
-    for (int x = 0; x < 6; x++)
+    for (int x = 0; x <= 7; x++)
     {
         pQueque[x] = pQueque[x + 1];
     }
@@ -203,7 +210,7 @@ void piece(int x)
             block[5][21] = 2;
             block[6][21] = 2;
             currentRot = 0;
-            tPoint[4][20] = 1;
+            tPoint[5][21] = 1;
             break;
         case 3://S
             block[6][20] = 3;
@@ -945,7 +952,7 @@ void GameOver()
 }
 bool gameOverTest()
 {
-    if (pile[4][20] > 0)
+    if ((pile[4][20] > 0)||(pile[5][20] > 0 ))
     {
         GameOver();
         return false;
@@ -1031,133 +1038,38 @@ void loop()
 
 void rotate(bool turn)
 {
-    int xSpin = 0;
-    int ySpin = 0;
-    int xRelative = 0;
-    int yRelative = 0;
-    int xT = 0;
-    int yT = 0;
-    bool noSpin = false;
-    bool latch = false;
-    int pRot = 0;
+    xSpin = 0;
+    ySpin = 0;
+    xOffset = 0;
+    yOffset = 0;
+    int nRotation = currentRot;
+    cturn = turn;
+    rotated = false;
 
-
+    if (turn = true)
+    {
+    	nRotation++;
+    }
+    else
+    {
+    	nRotation--;
+    }
+    if (nRotation > 3)
+    {
+    	nRotation = 0;
+    }
+    if (nRotation < 0)
+    {
+    	nRotation = 3;
+    }
+    
     if (pieceC == 1)
     {//0 piece
         return;
     }
-    if (pieceC == 2)
-    {//I piece//STOP PROCRASTINATINGSTOP PROCRASTINATINGSTOP PROCRASTINATINGSTOP PROCRASTINATINGSTOP PROCRASTINATINGSTOP PROCRASTINATINGSTOP PROCRASTINATINGSTOP PROCRASTINATINGSTOP PROCRASTINATINGSTOP PROCRASTINATING
-        for (int y = 0; y <= 25; y++)
-        {
-            for (int x = 0; x <= 9; x++)
-            {
-                if (tPoint[x][y] > 0)
-                {
-                    xSpin = x;
-                    ySpin = y;
-
-                }
-                newPlace[x][y] = 0;
-            }
-
-        }
-        if (turn)
-        {
-            pRot = currentRot;
-            currentRot++;
-
-        }
-        else
-        {
-            pRot = currentRot;
-            currentRot--;
-        }
-        //Serial.println(ySpin);
-        if (currentRot < 0)
-        {
-            currentRot = 3;
-        }
-        if (currentRot > 3)
-        {
-            currentRot = 0;
-        }
-        //Serial.println(currentRot);
-        if (currentRot == 0)
-        {
-            newPlace[xSpin][ySpin + 1] = 2;
-            newPlace[xSpin - 1][ySpin + 1] = 2;
-            newPlace[xSpin + 1][ySpin + 1] = 2;
-            newPlace[xSpin + 2][ySpin + 1] = 2;
-            tPoint[xSpin][ySpin - 1] = 1;
-            tPoint[xSpin][ySpin] = 0;
-        }
-        else if (currentRot == 1)
-        {
-            newPlace[xSpin][ySpin - 1] = 2;
-            newPlace[xSpin][ySpin] = 2;
-            newPlace[xSpin][ySpin + 1] = 2;
-            newPlace[xSpin][ySpin + 2] = 2;
-            tPoint[xSpin][ySpin - 1] = 1;
-            tPoint[xSpin][ySpin] = 0;
-        }
-        else if (currentRot == 2)
-        {
-            newPlace[xSpin][ySpin] = 2;
-            newPlace[xSpin - 1][ySpin] = 2;
-            newPlace[xSpin + 1][ySpin] = 2;
-            newPlace[xSpin + 2][ySpin] = 2;
-            tPoint[xSpin][ySpin - 1] = 1;
-            tPoint[xSpin][ySpin] = 0;
-        }
-        else if (currentRot == 3)
-        {
-            newPlace[xSpin + 1][ySpin] = 2;
-            newPlace[xSpin + 1][ySpin - 1] = 2;
-            newPlace[xSpin + 1][ySpin + 1] = 2;
-            newPlace[xSpin + 1][ySpin + 2] = 2;
-            tPoint[xSpin][ySpin - 1] = 1;
-            tPoint[xSpin][ySpin] = 0;
-        }
-        for (int y = 0; y <= 25; y++)
-        {
-            for (int x = 0; x <= 9; x++)
-            {
-                if (newPlace[x][y] > 0 && pile[x][y] > 0)
-                {
-                    noSpin = true;
-                    currentRot = pRot;
-                    //Serial.println("fuck");
-                }
-                else
-                {
-
-                    // Serial.println("fuck");
-                }
-            }
-        }
-        if (noSpin == false)
-        {
-            for (int y = 0; y <= 25; y++)
-            {
-                for (int x = 0; x <= 9; x++)
-                {
-                    block[x][y] = 0;
-                }
-            }
-
-            for (int y = 0; y <= 25; y++)
-            {
-                for (int x = 0; x <= 9; x++)
-                {
-                    block[x][y] = newPlace[x][y];
-                    newPlace[x][y] = 0;
-                }
-            }
-        }
-        return;
-    }//END OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF IEND OF I
-    for (int y = 0; y <= 25; y++)
+    
+    
+    for (int y = 0; y <= 25; y++)//Get the rotation points location
     {
         for (int x = 0; x <= 9; x++)
         {
@@ -1170,160 +1082,187 @@ void rotate(bool turn)
             newPlace[x][y] = 0;
         }
     }
-
-    if (xSpin == 0)
-    {//wall kicks
-        if (canLeft)
-        {
-            moveLeft();
-            xSpin++;
-        }
-    }
-    if (xSpin == 9)
+    if (pieceC == 2)
     {
-        if (canRight)
-        {
-            moveRight();
-            xSpin--;
-        }
+    	if ((nRotation = 0)&&(!(rotated)))
+    			{
+    		xOffset = 0;
+    		yOffset = 0;
+    		rotOffSet(xOffset, yOffset);
+    			}
+    	if ((nRotation = 1)&&(!(rotated)))
+    	    	{
+			xOffset = -1;
+	    	yOffset = 0;
+	    	rotOffSet(xOffset, yOffset);	
+    	    	}
+    	if ((nRotation = 2)&&(!(rotated)))
+    	    	{
+			xOffset = 1;
+	    	yOffset = 11;
+	    	rotOffSet(xOffset, yOffset);	
+    	    	}
+    	if ((nRotation = 3)&&(!(rotated)))
+    	    	{
+			xOffset = 0;
+	    	yOffset = 1;
+	    	rotOffSet(xOffset, yOffset);	
+    	    	}
+    	return;
     }
-    for (int y = 0; y <= 25; y++)
+    rotOffSet(0,0);
+    
+    
+    if ((nRotation = 1)&&(!(rotated)))
     {
-        for (int x = 0; x <= 9; x++)
-        {
-            if (block[x][y] > 0)
-            {
-                xRelative = x - xSpin;
-                yRelative = y - ySpin;
-                if (turn)
-                {
-                    xT = 0 * xRelative + -1 * yRelative;
-                    yT = 1 * xRelative + 0 * yRelative;
-                    if ((ySpin == 0) || (latch))
-                    {
-                        if (stick())
-                        {
-                            newPlace[xT + xSpin][yT + ySpin + 2] = block[x][y];
-                            //tPoint[x][y+2] = tPoint[x][y];
-                            latch = true;
-                        }
-                        else
-                        {
-                            newPlace[xT + xSpin][yT + ySpin + 1] = block[x][y];
-                            //tPoint[x][y+1] = tPoint[x][y];
-                            latch = true;
-                        }
-                        //tPoint[x][y+1] = tPoint[x][y];
-                    }
-                    else
-                    {
-                        newPlace[xT + xSpin][yT + ySpin] = block[x][y];
-                        //Serial.println("mones");
-                    }
-
-                }
-                else
-                {
-                    xT = 0 * xRelative + 1 * yRelative;
-                    yT = -1 * xRelative + 0 * yRelative;
-                    if ((ySpin == 0) || (latch))
-                    {
-                        if (stick())
-                        {
-                            newPlace[xT + xSpin][yT + ySpin + 2] = block[x][y];
-                            //tPoint[x][y+2] = tPoint[x][y];
-                            latch = true;
-                        }
-                        else
-                        {
-                            newPlace[xT + xSpin][yT + ySpin + 1] = block[x][y];
-                            //tPoint[x][y+1] = tPoint[x][y];
-                            latch = true;
-                        }
-                        //Serial.println("fuck bitches moake mones");
-                    }
-                    else
-                    {
-                        newPlace[xT + xSpin][yT + ySpin] = block[x][y];
-                    }
-                }
-            }
-        }
+    	xOffset = -1;
+    	yOffset = 0;
+    	rotOffSet(xOffset, yOffset);
     }
-    if (latch)
+    else if ((nRotation = 1)&&(!(rotated)))
     {
-        if (stick())
-        {
-            tPoint[xSpin][ySpin + 2] = tPoint[xSpin][ySpin];
-        }
-        else
-        {
-            tPoint[xSpin][ySpin + 1] = tPoint[xSpin][ySpin];
-        }
+    	xOffset = -1;
+    	yOffset = -1;
+       	rotOffSet(xOffset, yOffset);
     }
-    for (int y = 0; y <= 25; y++)
-    {
-        for (int x = 0; x <= 9; x++)
+    else if ((nRotation = 1)&&(!(rotated)))
         {
-            if (newPlace[x][y] > 0 && pile[x][y] > 0)
-            {//ground kicks
-
-                if (pile[x][y + 1] == 0)
-                {
-                    // Serial.println("peepee");
-                    for (int y = 25; y >= 0; y--)
-                    {
-                        for (int x = 0; x <= 9; x++)
-                        {
-                            if (newPlace[x][y] > 0)
-                            {
-                                newPlace[x][y + 1] = newPlace[x][y];
-                                tPoint[x][y + 1] = tPoint[x][y];
-                                newPlace[x][y] = 0;
-                                tPoint[x][y] = 0;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    noSpin = true;
-                    // Serial.println("fuck");
-                }
-            }
+        	xOffset = 0;
+        	yOffset = 2;
+           	rotOffSet(xOffset, yOffset);
         }
-    }
-    for (int y = 0; y <= 25; y++)
-    {
-        for (int x = 0; x <= 9; x++)
+    else if ((nRotation = 1)&&(!(rotated)))
         {
-            if (newPlace[x][y] > 0 && pile[x][y] > 0)
-            {
-                noSpin = true;
-                //Serial.println("fuck");
-            }
+        	xOffset = -1;
+        	yOffset = 2;
+           	rotOffSet(xOffset, yOffset);
         }
-    }
-    if (noSpin == false)
-    {
-        for (int y = 0; y <= 25; y++)
+    
+    if ((nRotation = 3)&&(!(rotated)))
+		{
+    	xOffset = 1;
+    	yOffset = 0;
+    	rotOffSet(xOffset,yOffset);
+		}
+    else if ((nRotation = 3)&&(!(rotated)))
+    		{
+        	xOffset = 1;
+        	yOffset = -1;
+        	rotOffSet(xOffset,yOffset);
+    		}
+    else if ((nRotation = 3)&&(!(rotated)))
+    		{
+        	xOffset = 0;
+        	yOffset = 2;
+        	rotOffSet(xOffset,yOffset);
+    		}
+    else if ((nRotation = 3)&&(!(rotated)))
+    		{
+        	xOffset = 1;
+        	yOffset = 2;
+        	rotOffSet(xOffset,yOffset);
+    		}
+    if (!(rotated))
         {
-            for (int x = 0; x <= 9; x++)
-            {
-                block[x][y] = 0;
-            }
+        	xOffset = 0;
+        	yOffset = 1;
+        	rotOffSet(xOffset, yOffset);
         }
 
-        for (int y = 0; y <= 25; y++)
-        {
-            for (int x = 0; x <= 9; x++)
-            {
-                block[x][y] = newPlace[x][y];
-                newPlace[x][y] = 0;
-            }
-        }
-    }
+}
+void rotOffSet(int H, int V)
+{
+	int xRelative = 0;
+    int yRelative = 0;
+	int xT = 0;
+	int yT = 0;
+	for (int y = 0; y <= (ySpin+4); y++)//clear
+		    {
+		        for (int x = 0; x <= 9; x++)
+		        {
+		        	newPlace[x][y] = 0;
+		        }
+		    }
+	for (int y = 0; y <= (ySpin+4); y++)//spin it
+	    {
+	        for (int x = 0; x <= 9; x++)
+	        {
+	            if (block[x][y] > 0)
+	            {
+	                xRelative = x - xSpin;
+	                yRelative = y - ySpin;
+	                if (cturn)
+	                {
+	                    xT = 0 * xRelative + -1 * yRelative;
+	                    yT = 1 * xRelative + 0 * yRelative;
+	                    newPlace[xT + xSpin + H][yT + ySpin + V] = block[x][y];
+	                      
+	                }
+	                else
+	                {
+	                    xT = 0 * xRelative + 1 * yRelative;
+	                    yT = -1 * xRelative + 0 * yRelative;
+	                    newPlace[xT + xSpin + H][yT + ySpin + V] = block[x][y];
+	                    
+	                }
+	            }
+	        }
+	    }
+	placeRotation();
+}
 
+bool testCollision ()
+{
+	int pCount = 0;
+	for (int y = 0; y <= 25; y++)//tests to see if there is a collision
+	    {
+	        for (int x = 0; x <= 9; x++)
+	        {
+	        	if(newPlace[x][y] > 0 )
+	        	{
+	        		pCount++;
+	        	}
+	            if (newPlace[x][y] > 0 && pile[x][y] > 0)
+	            {
+	            	rotated = false;
+	                return false;
+	                
+	            }
+	        }
+	    }
+	if (pCount == 4)
+	{
+		return true;
+	}
+	else
+	{
+		rotated = false;
+	}
+	
+}
+void placeRotation ()
+{
+	 if (testCollision())//does the rotation
+	    {
+		 rotated = true;
+	        for (int y = 0; y <= 25; y++)
+	        {
+	            for (int x = 0; x <= 9; x++)
+	            {
+	                block[x][y] = 0;
+	                tPoint[x][y] = 0;
+	            }
+	        }
+	        tPoint[xSpin + xOffset][ySpin + yOffset] = 1;
+	        for (int y = 0; y <= 25; y++)
+	        {
+	            for (int x = 0; x <= 9; x++)
+	            {
+	                block[x][y] = newPlace[x][y];
+	                newPlace[x][y] = 0;
+	            }
+	        }
+	    }
 }
 
 void animationScroll()
