@@ -551,8 +551,8 @@ bool canRight()
 
 void pause()
 {
-    
-    if ((gameOverTest())&&(delayPause<millis()))
+
+    if ((gameOverTest()) && (delayPause < millis()))
     {
         active = !(active);
         start = !(start);
@@ -570,9 +570,9 @@ void pause()
     }
     else if (!(active))
     {
-       // iABoard[0][0] = 18;//D
+        // iABoard[0][0] = 18;//D
         iABoard[0][1] = 8;
-       // iABoard[0][2] = 18;
+        // iABoard[0][2] = 18;
         iABoard[1][0] = 8;
         //iABoard[1][1] = 18;
         iABoard[1][2] = 8;
@@ -618,12 +618,12 @@ void pause()
         iABoard[13][2] = 8;
         iABoard[14][0] = 8;
         iABoard[14][1] = 8;
-       // iABoard[14][2] = 18;
+        // iABoard[14][2] = 18;
 
         //iABoard[15][0] = 18;//P
         iABoard[15][1] = 9;
         iABoard[15][2] = 9;
-       // iABoard[16][0] = 18;
+        // iABoard[16][0] = 18;
         iABoard[16][1] = 9;
         iABoard[16][2] = 9;
         iABoard[17][0] = 9;
@@ -636,7 +636,7 @@ void pause()
 }
 void ghostP()
 {
-    int dist = -1;
+    int dist = 30;
     for (int y = 0; y <= 25; y++)
     {
         for (int x = 0; x <= 9; x++)
@@ -653,12 +653,17 @@ void ghostP()
             {
                 for (int z = 0; z < 25; z++)
                 {
+                    
                     if (pile[x][z] > 0)
                     {
-                        if ((z) > dist)
+                        if (((y - z) < dist)&&(y > z))
                         {
-                            dist = z;
+                            dist = y - z;
                         }
+                    }
+                    if (dist == 30)
+                    {
+                        dist = y+1;
                     }
                 }
             }
@@ -670,11 +675,22 @@ void ghostP()
         {
             if (block[x][y] > 0)
             {
-                ghBoard[x][dist + 1] = 9;
+                ghBoard[x][y-dist+1] = 9;
+            }
+            
+        }
+    }
+    for (int y = 0; y <= 25; y++)
+    {
+        for (int x = 0; x <= 9; x++)
+        {
+            if ((block[x][y] > 0) && (ghBoard[x][y] > 0))
+            {
+                ghBoard[x][y] = 0;
             }
         }
     }
-    //Serial.println(dist);
+            //Serial.println(dist);
 }
 uint16_t XY(uint8_t x, uint8_t y)
 {
@@ -905,7 +921,7 @@ void InfoB()
             {
                 iBoard[x][y] = iABoard[x][y];
             }
-            
+
         }
     }
 
@@ -961,7 +977,7 @@ void InfoB()
                 //Serial.println("weewoo");
                 //Serial.println(XY(x, y));
             }
-            else if(iBoard[x][y] >= 27 && iBoard[x][y] <=35)
+            else if (iBoard[x][y] >= 27 && iBoard[x][y] <= 35)
             {
                 ledsI[XY(x, y)] = 0x555555;
             }
