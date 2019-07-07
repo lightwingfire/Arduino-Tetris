@@ -20,7 +20,10 @@ const int joyDown = 2;
 const int joyLeft = A1;
 const int joyRight = A0;
 
-uint8_t iBoard[18][4];
+uint8_t iPieceBoard[20][4];
+uint8_t iBoard[20][4];
+uint8_t iABoard[20][4];
+
 uint8_t gBoard[11][40];
 uint8_t block[11][40];
 uint8_t pile[11][40];
@@ -37,6 +40,7 @@ long delayAnimation = 0;
 long delayAnimationDeath = 0;
 long delayAnimationLineClear = 0;
 long delayNewBlock = 0;
+long delayPause = 0;
 
 
 int delayLevel = 1000;
@@ -48,6 +52,7 @@ int nextP = 7;
 int pieceC = 0;
 int currentRot = 0;
 int held = 0;
+bool active = false;
 
 int xSpin = 0;
 int ySpin = 0;
@@ -68,6 +73,7 @@ bool stickyHold = true;
 bool stickyDrop = true;
 bool stickyHeld = true;
 bool firstHeld = true;
+bool stickyStart = true;
 
 void setup()
 {
@@ -109,7 +115,7 @@ int nextPiece()
     if (nextP == 8)
     {
         shuffleDeck();
-        for (int x = 0; x <= 7; x++)
+        for (int x = 0; x <= 6; x++)
         {
             pQueque[x] = shuffle[x];
         }
@@ -118,9 +124,9 @@ int nextPiece()
     if (nextP == 3)
     {
         shuffleDeck();
-        for (int x = 0; x <= 7; x++)
+        for (int x = 0; x <= 6; x++)
         {
-            pQueque[x+3] = shuffle[x];
+            pQueque[x + 3] = shuffle[x];
         }
         nextP = 0;
     }
@@ -257,6 +263,10 @@ void piece(int x)
 
 bool stick()
 {
+    if (active == false)
+    {
+        return false;
+    }
     if (digitalRead(joyUp) == LOW)
     {
 
@@ -280,6 +290,34 @@ bool stick()
 }
 void buttons()
 {
+
+    if ((digitalRead(startB) == LOW) && (stickyStart == true))
+    {
+        Serial.println("PAUSE");
+        pause();
+        //go = true;
+        for (int y = 0; y <= 25; y++)
+        {
+            for (int x = 0; x <= 9; x++)
+            {
+                aBoard[x][y] = 0;
+            }
+        }
+        //start = true;
+        Serial.println("HEYO");
+        stickyStart = true;
+
+    }
+    if (digitalRead(startB) == HIGH)
+    {
+        //Serial.println("I count too");
+        stickyStart == true;
+    }
+
+    if (active == false)
+    {
+        return;
+    }
     if (digitalRead(rotLeftB) == LOW && stickyLeft == true)
     {
         rotate(true);
@@ -318,19 +356,7 @@ void buttons()
     {
         stickyHold = true;
     }
-    if (digitalRead(startB) == LOW)
-    {
-        //go = true;
-        for (int y = 0; y <= 25; y++)
-        {
-            for (int x = 0; x <= 9; x++)
-            {
-                aBoard[x][y] = 0;
-            }
-        }
-        start = true;
 
-    }
 }
 
 bool moveDown(bool stickk)
@@ -458,6 +484,10 @@ void hardDrop()
 bool canDown()
 {
 
+    if (!(active))
+    {
+        return false;
+    }
     for (int y = 25; y >= 0; y--)
     {
         for (int x = 0; x <= 9; x++)
@@ -519,6 +549,91 @@ bool canRight()
     return true;
 }
 
+void pause()
+{
+    
+    if ((gameOverTest())&&(delayPause<millis()))
+    {
+        active = !(active);
+        start = !(start);
+
+    }
+    if (active)
+    {
+        for (int y = 0; y <= 3; y++)
+        {
+            for (int x = 0; x <= 17; x++)
+            {
+                iABoard[x][y] = 0;
+            }
+        }
+    }
+    else if (!(active))
+    {
+       // iABoard[0][0] = 18;//D
+        iABoard[0][1] = 8;
+       // iABoard[0][2] = 18;
+        iABoard[1][0] = 8;
+        //iABoard[1][1] = 18;
+        iABoard[1][2] = 8;
+        iABoard[2][0] = 8;
+        iABoard[2][1] = 8;
+        iABoard[2][2] = 8;
+
+        iABoard[3][0] = 9;//E
+        //iABoard[3][1] = 18;
+        iABoard[3][2] = 9;
+        iABoard[4][0] = 9;
+        iABoard[4][1] = 9;
+        iABoard[4][2] = 9;
+        iABoard[5][0] = 9;
+        iABoard[5][1] = 9;
+        iABoard[5][2] = 9;
+
+        //iABoard[6][0] = 18;//S
+        //iABoard[6][1] = 18;
+        iABoard[6][2] = 8;
+        iABoard[7][0] = 8;
+        iABoard[7][1] = 8;
+        iABoard[7][2] = 8;
+        iABoard[8][0] = 8;
+        //iABoard[8][1] = 18;
+        //iABoard[8][2] = 18;
+
+        iABoard[9][0] = 9;//U
+        iABoard[9][1] = 9;
+        iABoard[9][2] = 9;
+        iABoard[10][0] = 9;
+        //iABoard[10][1] = 18;
+        //iABoard[10][2] = 18;
+        iABoard[11][0] = 9;
+        iABoard[11][1] = 9;
+        iABoard[11][2] = 9;
+
+        iABoard[12][0] = 8;//A
+        iABoard[12][1] = 8;
+        //iABoard[12][2] = 18;
+        //iABoard[13][0] = 18;
+        iABoard[13][1] = 8;
+        iABoard[13][2] = 8;
+        iABoard[14][0] = 8;
+        iABoard[14][1] = 8;
+       // iABoard[14][2] = 18;
+
+        //iABoard[15][0] = 18;//P
+        iABoard[15][1] = 9;
+        iABoard[15][2] = 9;
+       // iABoard[16][0] = 18;
+        iABoard[16][1] = 9;
+        iABoard[16][2] = 9;
+        iABoard[17][0] = 9;
+        iABoard[17][1] = 9;
+        iABoard[17][2] = 9;
+
+    }
+    delayPause = millis() + 2000;
+    Serial.println("PAUSE");
+}
 void ghostP()
 {
     int dist = -1;
@@ -530,36 +645,36 @@ void ghostP()
         }
     }
 
-     for (int y = 0; y <= 25; y++)
-     {
-         for (int x = 0; x <= 9; x++)
-         {
-             if (block[x][y] > 0)
-             {
-                 for (int z = 0; z < 25; z++)
-                 {
-                     if (pile[x][z] > 0)
-                     {
-                        if((z) > dist)
-                        {
-                            dist = z;
-                        }
-                     }
-                 }
-             }
-         }
-     }
     for (int y = 0; y <= 25; y++)
     {
         for (int x = 0; x <= 9; x++)
         {
             if (block[x][y] > 0)
             {
-                ghBoard[x][dist+1] = 9;
+                for (int z = 0; z < 25; z++)
+                {
+                    if (pile[x][z] > 0)
+                    {
+                        if ((z) > dist)
+                        {
+                            dist = z;
+                        }
+                    }
+                }
             }
         }
     }
-            Serial.println(dist);
+    for (int y = 0; y <= 25; y++)
+    {
+        for (int x = 0; x <= 9; x++)
+        {
+            if (block[x][y] > 0)
+            {
+                ghBoard[x][dist + 1] = 9;
+            }
+        }
+    }
+    //Serial.println(dist);
 }
 uint16_t XY(uint8_t x, uint8_t y)
 {
@@ -629,6 +744,10 @@ void GameB()
             {//line clear
                 leds[XY(x, y)] = 0xDDDDDD;
             }
+            else if (gBoard[x][y] > 30)
+            {//line clear
+                leds[XY(x, y)] = 0x000000;
+            }
             else
             {
                 leds[XY(x, y)] = 0xFFFFFF;
@@ -648,57 +767,57 @@ void holdI()
     {
         for (int x = 14; x <= 17; x++)
         {
-            iBoard[x][y] = 0;
+            iPieceBoard[x][y] = 0;
         }
     }
     if (held == 1)//o
     {
-        iBoard[14][0] = 1;
-        iBoard[15][0] = 1;
-        iBoard[14][1] = 1;
-        iBoard[15][1] = 1;
+        iPieceBoard[14][0] = 1;
+        iPieceBoard[15][0] = 1;
+        iPieceBoard[14][1] = 1;
+        iPieceBoard[15][1] = 1;
     }
     else if (held == 2)//I
     {
-        iBoard[15][0] = 2;
-        iBoard[15][1] = 2;
-        iBoard[15][2] = 2;
+        iPieceBoard[15][0] = 2;
+        iPieceBoard[15][1] = 2;
+        iPieceBoard[15][2] = 2;
         //iBoard[15][3] = 2;
     }
     else if (held == 3)//s
     {
-        iBoard[14][1] = 3;
-        iBoard[15][1] = 3;
-        iBoard[15][0] = 3;
-        iBoard[16][0] = 3;
+        iPieceBoard[14][1] = 3;
+        iPieceBoard[15][1] = 3;
+        iPieceBoard[15][0] = 3;
+        iPieceBoard[16][0] = 3;
     }
     else if (held == 4)//z
     {
-        iBoard[16][1] = 4;
-        iBoard[15][1] = 4;
-        iBoard[15][0] = 4;
-        iBoard[14][0] = 4;
+        iPieceBoard[16][1] = 4;
+        iPieceBoard[15][1] = 4;
+        iPieceBoard[15][0] = 4;
+        iPieceBoard[14][0] = 4;
     }
     else if (held == 5)//L
     {
-        iBoard[15][2] = 5;
-        iBoard[15][1] = 5;
-        iBoard[15][0] = 5;
-        iBoard[14][0] = 5;
+        iPieceBoard[15][2] = 5;
+        iPieceBoard[15][1] = 5;
+        iPieceBoard[15][0] = 5;
+        iPieceBoard[14][0] = 5;
     }
     else if (held == 6)//J
     {
-        iBoard[14][2] = 6;
-        iBoard[14][1] = 6;
-        iBoard[14][0] = 6;
-        iBoard[15][0] = 6;
+        iPieceBoard[14][2] = 6;
+        iPieceBoard[14][1] = 6;
+        iPieceBoard[14][0] = 6;
+        iPieceBoard[15][0] = 6;
     }
     else if (held == 7)//T
     {
-        iBoard[15][0] = 7;
-        iBoard[14][1] = 7;
-        iBoard[15][1] = 7;
-        iBoard[16][1] = 7;
+        iPieceBoard[15][0] = 7;
+        iPieceBoard[14][1] = 7;
+        iPieceBoard[15][1] = 7;
+        iPieceBoard[16][1] = 7;
     }
 }
 void nextPI(int r)
@@ -706,62 +825,62 @@ void nextPI(int r)
     //Serial.println("preview");
     //int preview = shuffle[nextP + r + 1];
     int preview = pQueque[r + 1];
-    r = 9 - 4*r;
+    r = 9 - 4 * r;
     for (int y = 0; y <= 3; y++)
     {
         for (int x = r; x <= (3 + r); x++)
         {
-            iBoard[x][y] = 0;
+            iPieceBoard[x][y] = 0;
         }
     }
     if (preview == 1)//o
     {
-        iBoard[r][0] = 1;
-        iBoard[r+1][0] = 1;
-        iBoard[r][1] = 1;
-        iBoard[r+1][1] = 1;
+        iPieceBoard[r][0] = 1;
+        iPieceBoard[r + 1][0] = 1;
+        iPieceBoard[r][1] = 1;
+        iPieceBoard[r + 1][1] = 1;
     }
     else if (preview == 2)//I
     {
-        iBoard[r+1][0] = 2;
-        iBoard[r+1][1] = 2;
-        iBoard[r+1][2] = 2;
+        iPieceBoard[r + 1][0] = 2;
+        iPieceBoard[r + 1][1] = 2;
+        iPieceBoard[r + 1][2] = 2;
         //iBoard[15][3] = 2;
     }
     else if (preview == 3)//s
     {
-        iBoard[r][1] = 3;
-        iBoard[r+1][1] = 3;
-        iBoard[r+1][0] = 3;
-        iBoard[r+2][0] = 3;
+        iPieceBoard[r][1] = 3;
+        iPieceBoard[r + 1][1] = 3;
+        iPieceBoard[r + 1][0] = 3;
+        iPieceBoard[r + 2][0] = 3;
     }
     else if (preview == 4)//z
     {
-        iBoard[r+2][1] = 4;
-        iBoard[r+1][1] = 4;
-        iBoard[r+1][0] = 4;
-        iBoard[r][0] = 4;
+        iPieceBoard[r + 2][1] = 4;
+        iPieceBoard[r + 1][1] = 4;
+        iPieceBoard[r + 1][0] = 4;
+        iPieceBoard[r][0] = 4;
     }
     else if (preview == 5)//L
     {
-        iBoard[r+1][2] = 5;
-        iBoard[r+1][1] = 5;
-        iBoard[r+1][0] = 5;
-        iBoard[r][0] = 5;
+        iPieceBoard[r + 1][2] = 5;
+        iPieceBoard[r + 1][1] = 5;
+        iPieceBoard[r + 1][0] = 5;
+        iPieceBoard[r][0] = 5;
     }
     else if (preview == 6)//J
     {
-        iBoard[r][2] = 6;
-        iBoard[r][1] = 6;
-        iBoard[r][0] = 6;
-        iBoard[r+1][0] = 6;
+        iPieceBoard[r][2] = 6;
+        iPieceBoard[r][1] = 6;
+        iPieceBoard[r][0] = 6;
+        iPieceBoard[r + 1][0] = 6;
     }
     else if (preview == 7)//T
     {
-        iBoard[r+1][0] = 7;
-        iBoard[r][1] = 7;
-        iBoard[r+1][1] = 7;
-        iBoard[r+2][1] = 7;
+        iPieceBoard[r + 1][0] = 7;
+        iPieceBoard[r][1] = 7;
+        iPieceBoard[r + 1][1] = 7;
+        iPieceBoard[r + 2][1] = 7;
     }
 
 }
@@ -772,6 +891,24 @@ void InfoB()
     nextPI(0);
     nextPI(1);
     nextPI(2);
+
+    for (int y = 0; y <= 3; y++)
+    {
+        for (int x = 0; x <= 17; x++)
+        {
+            //iBoard[x][y] = 0;
+            if (active)
+            {
+                iBoard[x][y] = iPieceBoard[x][y];
+            }
+            else if (!(active))
+            {
+                iBoard[x][y] = iABoard[x][y];
+            }
+            
+        }
+    }
+
 
     for (int y = 0; y <= 3; y++)
     {
@@ -812,17 +949,21 @@ void InfoB()
             }
             else if (iBoard[x][y] == 8)
             {//dead color
-                ledsI[XYi(x, y)] = 0x660000;
+                ledsI[XYi(x, y)] = 0x555555;
             }
             else if (iBoard[x][y] == 9)
-            {//line clear
+            {//white
                 ledsI[XYi(x, y)] = 0xDDDDDD;
             }
-            else
+            else if (iBoard[x][y] == 10)
             {
-                //ledsI[XY(x, y)] = 0xFFFFFF;
+                ledsI[XY(x, y)] = 0x555555;
                 //Serial.println("weewoo");
                 //Serial.println(XY(x, y));
+            }
+            else if(iBoard[x][y] >= 27 && iBoard[x][y] <=35)
+            {
+                ledsI[XY(x, y)] = 0x555555;
             }
 
 
@@ -833,7 +974,7 @@ void InfoB()
 
 void clearTest()
 {
-    
+
     int t = 0;
     bool g = false;
     if (gameOverTest())
@@ -952,7 +1093,7 @@ void GameOver()
 }
 bool gameOverTest()
 {
-    if ((pile[4][20] > 0)||(pile[5][20] > 0 ))
+    if ((pile[4][20] > 0) || (pile[5][20] > 0))
     {
         GameOver();
         return false;
@@ -994,7 +1135,7 @@ void timing()
     {
         delayNewBlock = millis() + 500;
     }
-    if((delayAnimationLineClear < millis()) && (animationClearLatch))
+    if ((delayAnimationLineClear < millis()) && (animationClearLatch))
     {
         clearLine();
         animationClearLatch = false;
@@ -1005,12 +1146,13 @@ void timing()
                 aBoard[x][y] = 0;
             }
         }
-        
+
     }
 }
 
 void loop()
 {
+    gameOverTest();
     buttons();
     timing();
     if (start)
@@ -1026,8 +1168,14 @@ void loop()
     }
     else
     {
-
-        animationScroll();
+        if (currentScore > 1)
+        {
+            animationPaused();
+        }
+        else
+        {
+            animationScroll();
+        }
         InfoB();
         GameB();
     }
@@ -1048,27 +1196,27 @@ void rotate(bool turn)
 
     if (turn = true)
     {
-    	nRotation++;
+        nRotation++;
     }
     else
     {
-    	nRotation--;
+        nRotation--;
     }
     if (nRotation > 3)
     {
-    	nRotation = 0;
+        nRotation = 0;
     }
     if (nRotation < 0)
     {
-    	nRotation = 3;
+        nRotation = 3;
     }
-    
+
     if (pieceC == 1)
     {//0 piece
         return;
     }
-    
-    
+
+
     for (int y = 0; y <= 25; y++)//Get the rotation points location
     {
         for (int x = 0; x <= 9; x++)
@@ -1084,187 +1232,198 @@ void rotate(bool turn)
     }
     if (pieceC == 2)
     {
-    	if ((nRotation = 0)&&(!(rotated)))
-    			{
-    		xOffset = 0;
-    		yOffset = 0;
-    		rotOffSet(xOffset, yOffset);
-    			}
-    	if ((nRotation = 1)&&(!(rotated)))
-    	    	{
-			xOffset = -1;
-	    	yOffset = 0;
-	    	rotOffSet(xOffset, yOffset);	
-    	    	}
-    	if ((nRotation = 2)&&(!(rotated)))
-    	    	{
-			xOffset = 1;
-	    	yOffset = 11;
-	    	rotOffSet(xOffset, yOffset);	
-    	    	}
-    	if ((nRotation = 3)&&(!(rotated)))
-    	    	{
-			xOffset = 0;
-	    	yOffset = 1;
-	    	rotOffSet(xOffset, yOffset);	
-    	    	}
-    	return;
-    }
-    rotOffSet(0,0);
-    
-    
-    if ((nRotation = 1)&&(!(rotated)))
-    {
-    	xOffset = -1;
-    	yOffset = 0;
-    	rotOffSet(xOffset, yOffset);
-    }
-    else if ((nRotation = 1)&&(!(rotated)))
-    {
-    	xOffset = -1;
-    	yOffset = -1;
-       	rotOffSet(xOffset, yOffset);
-    }
-    else if ((nRotation = 1)&&(!(rotated)))
+        if ((nRotation = 0) && (!(rotated)))
         {
-        	xOffset = 0;
-        	yOffset = 2;
-           	rotOffSet(xOffset, yOffset);
+            xOffset = 0;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
         }
-    else if ((nRotation = 1)&&(!(rotated)))
+        if ((nRotation = 1) && (!(rotated)))
         {
-        	xOffset = -1;
-        	yOffset = 2;
-           	rotOffSet(xOffset, yOffset);
+            xOffset = -1;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
         }
-    
-    if ((nRotation = 3)&&(!(rotated)))
-		{
-    	xOffset = 1;
-    	yOffset = 0;
-    	rotOffSet(xOffset,yOffset);
-		}
-    else if ((nRotation = 3)&&(!(rotated)))
-    		{
-        	xOffset = 1;
-        	yOffset = -1;
-        	rotOffSet(xOffset,yOffset);
-    		}
-    else if ((nRotation = 3)&&(!(rotated)))
-    		{
-        	xOffset = 0;
-        	yOffset = 2;
-        	rotOffSet(xOffset,yOffset);
-    		}
-    else if ((nRotation = 3)&&(!(rotated)))
-    		{
-        	xOffset = 1;
-        	yOffset = 2;
-        	rotOffSet(xOffset,yOffset);
-    		}
+        if ((nRotation = 2) && (!(rotated)))
+        {
+            xOffset = 1;
+            yOffset = 11;
+            rotOffSet(xOffset, yOffset);
+        }
+        if ((nRotation = 3) && (!(rotated)))
+        {
+            xOffset = 0;
+            yOffset = 1;
+            rotOffSet(xOffset, yOffset);
+        }
+        return;
+    }
+    rotOffSet(0, 0);
+
+
+    if ((nRotation = 1) && (!(rotated)))
+    {
+        xOffset = -1;
+        yOffset = 0;
+        rotOffSet(xOffset, yOffset);
+    }
+    else if ((nRotation = 1) && (!(rotated)))
+    {
+        xOffset = -1;
+        yOffset = -1;
+        rotOffSet(xOffset, yOffset);
+    }
+    else if ((nRotation = 1) && (!(rotated)))
+    {
+        xOffset = 0;
+        yOffset = 2;
+        rotOffSet(xOffset, yOffset);
+    }
+    else if ((nRotation = 1) && (!(rotated)))
+    {
+        xOffset = -1;
+        yOffset = 2;
+        rotOffSet(xOffset, yOffset);
+    }
+
+    if ((nRotation = 3) && (!(rotated)))
+    {
+        xOffset = 1;
+        yOffset = 0;
+        rotOffSet(xOffset, yOffset);
+    }
+    else if ((nRotation = 3) && (!(rotated)))
+    {
+        xOffset = 1;
+        yOffset = -1;
+        rotOffSet(xOffset, yOffset);
+    }
+    else if ((nRotation = 3) && (!(rotated)))
+    {
+        xOffset = 0;
+        yOffset = 2;
+        rotOffSet(xOffset, yOffset);
+    }
+    else if ((nRotation = 3) && (!(rotated)))
+    {
+        xOffset = 1;
+        yOffset = 2;
+        rotOffSet(xOffset, yOffset);
+    }
     if (!(rotated))
-        {
-        	xOffset = 0;
-        	yOffset = 1;
-        	rotOffSet(xOffset, yOffset);
-        }
+    {
+        xOffset = 0;
+        yOffset = 1;
+        rotOffSet(xOffset, yOffset);
+    }
 
 }
 void rotOffSet(int H, int V)
 {
-	int xRelative = 0;
+    int xRelative = 0;
     int yRelative = 0;
-	int xT = 0;
-	int yT = 0;
-	for (int y = 0; y <= (ySpin+4); y++)//clear
-		    {
-		        for (int x = 0; x <= 9; x++)
-		        {
-		        	newPlace[x][y] = 0;
-		        }
-		    }
-	for (int y = 0; y <= (ySpin+4); y++)//spin it
-	    {
-	        for (int x = 0; x <= 9; x++)
-	        {
-	            if (block[x][y] > 0)
-	            {
-	                xRelative = x - xSpin;
-	                yRelative = y - ySpin;
-	                if (cturn)
-	                {
-	                    xT = 0 * xRelative + -1 * yRelative;
-	                    yT = 1 * xRelative + 0 * yRelative;
-	                    newPlace[xT + xSpin + H][yT + ySpin + V] = block[x][y];
-	                      
-	                }
-	                else
-	                {
-	                    xT = 0 * xRelative + 1 * yRelative;
-	                    yT = -1 * xRelative + 0 * yRelative;
-	                    newPlace[xT + xSpin + H][yT + ySpin + V] = block[x][y];
-	                    
-	                }
-	            }
-	        }
-	    }
-	placeRotation();
+    int xT = 0;
+    int yT = 0;
+    for (int y = 0; y <= (ySpin + 4); y++)//clear
+    {
+        for (int x = 0; x <= 9; x++)
+        {
+            newPlace[x][y] = 0;
+        }
+    }
+    for (int y = 0; y <= (ySpin + 4); y++)//spin it
+    {
+        for (int x = 0; x <= 9; x++)
+        {
+            if (block[x][y] > 0)
+            {
+                xRelative = x - xSpin;
+                yRelative = y - ySpin;
+                if (cturn)
+                {
+                    xT = 0 * xRelative + -1 * yRelative;
+                    yT = 1 * xRelative + 0 * yRelative;
+                    newPlace[xT + xSpin + H][yT + ySpin + V] = block[x][y];
+
+                }
+                else
+                {
+                    xT = 0 * xRelative + 1 * yRelative;
+                    yT = -1 * xRelative + 0 * yRelative;
+                    newPlace[xT + xSpin + H][yT + ySpin + V] = block[x][y];
+
+                }
+            }
+        }
+    }
+    placeRotation();
 }
 
-bool testCollision ()
+bool testCollision()
 {
-	int pCount = 0;
-	for (int y = 0; y <= 25; y++)//tests to see if there is a collision
-	    {
-	        for (int x = 0; x <= 9; x++)
-	        {
-	        	if(newPlace[x][y] > 0 )
-	        	{
-	        		pCount++;
-	        	}
-	            if (newPlace[x][y] > 0 && pile[x][y] > 0)
-	            {
-	            	rotated = false;
-	                return false;
-	                
-	            }
-	        }
-	    }
-	if (pCount == 4)
-	{
-		return true;
-	}
-	else
-	{
-		rotated = false;
-	}
-	
+    int pCount = 0;
+    for (int y = 0; y <= 25; y++)//tests to see if there is a collision
+    {
+        for (int x = 0; x <= 9; x++)
+        {
+            if (newPlace[x][y] > 0)
+            {
+                pCount++;
+            }
+            if (newPlace[x][y] > 0 && pile[x][y] > 0)
+            {
+                rotated = false;
+                return false;
+
+            }
+        }
+    }
+    if (pCount == 4)
+    {
+        return true;
+    }
+    else
+    {
+        rotated = false;
+    }
+
 }
-void placeRotation ()
+void placeRotation()
 {
-	 if (testCollision())//does the rotation
-	    {
-		 rotated = true;
-	        for (int y = 0; y <= 25; y++)
-	        {
-	            for (int x = 0; x <= 9; x++)
-	            {
-	                block[x][y] = 0;
-	                tPoint[x][y] = 0;
-	            }
-	        }
-	        tPoint[xSpin + xOffset][ySpin + yOffset] = 1;
-	        for (int y = 0; y <= 25; y++)
-	        {
-	            for (int x = 0; x <= 9; x++)
-	            {
-	                block[x][y] = newPlace[x][y];
-	                newPlace[x][y] = 0;
-	            }
-	        }
-	    }
+    if (testCollision())//does the rotation
+    {
+        rotated = true;
+        for (int y = 0; y <= 25; y++)
+        {
+            for (int x = 0; x <= 9; x++)
+            {
+                block[x][y] = 0;
+                tPoint[x][y] = 0;
+            }
+        }
+        tPoint[xSpin + xOffset][ySpin + yOffset] = 1;
+        for (int y = 0; y <= 25; y++)
+        {
+            for (int x = 0; x <= 9; x++)
+            {
+                block[x][y] = newPlace[x][y];
+                newPlace[x][y] = 0;
+            }
+        }
+    }
 }
 
+void animationPaused()
+{
+    for (int y = 0; y <= 20; y++)
+    {
+        for (int x = 0; x <= 9; x++)
+        {
+            aBoard[x][y] = 31;
+        }
+    }
+
+}
 void animationScroll()
 {
 
@@ -1553,7 +1712,7 @@ void animationLineClear(int y)
 {
     delayAnimationLineClear = millis() + 150;
     animationClearLatch = true;
-    for(int x = 0; x<= 9; x++)
+    for (int x = 0; x <= 9; x++)
     {
         aBoard[x][y] = 9;
     }
