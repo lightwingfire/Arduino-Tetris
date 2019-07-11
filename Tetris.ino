@@ -56,6 +56,7 @@ bool active = false;
 
 int xSpin = 0;
 int ySpin = 0;
+int nRotation;
 bool cturn;
 bool rotated = false;
 int xOffset = 0;
@@ -112,6 +113,13 @@ void shuffleDeck()
 int nextPiece()
 {
     nextP++;
+    for (int x = 0; x <= 14; x++)
+    {
+        pQueque[x] = pQueque[x + 1];
+        //Serial.print(pQueque[x]);
+
+    }
+    //Serial.println(" ");
     if (nextP == 8)
     {
         shuffleDeck();
@@ -119,21 +127,24 @@ int nextPiece()
         {
             pQueque[x] = shuffle[x];
         }
+        shuffleDeck();
+        for (int x = 0; x <= 6; x++)
+        {
+            pQueque[x + 7] = shuffle[x];
+        }
         nextP = 0;
     }
-    if (nextP == 3)
+    if (pQueque[7] == 0)
     {
         shuffleDeck();
         for (int x = 0; x <= 6; x++)
         {
-            pQueque[x + 3] = shuffle[x];
+            pQueque[x + 7] = shuffle[x];
         }
-        nextP = 0;
+        nextP = -1;
     }
-    for (int x = 0; x <= 7; x++)
-    {
-        pQueque[x] = pQueque[x + 1];
-    }
+    //int y = 2;
+    //return y;
     return pQueque[0];
     /*nextP++;
     if (nextP > 6)
@@ -293,7 +304,7 @@ void buttons()
 
     if ((digitalRead(startB) == LOW) && (stickyStart == true))
     {
-        Serial.println("PAUSE");
+        //Serial.println("PAUSE");
         pause();
         //go = true;
         for (int y = 0; y <= 25; y++)
@@ -304,7 +315,7 @@ void buttons()
             }
         }
         //start = true;
-        Serial.println("HEYO");
+        //Serial.println("HEYO");
         stickyStart = true;
 
     }
@@ -570,6 +581,7 @@ void pause()
     }
     else if (!(active))
     {
+        animationPaused();
         // iABoard[0][0] = 18;//D
         iABoard[0][1] = 8;
         // iABoard[0][2] = 18;
@@ -632,7 +644,7 @@ void pause()
 
     }
     delayPause = millis() + 2000;
-    Serial.println("PAUSE");
+    // Serial.println("PAUSE");
 }
 void ghostP()
 {
@@ -653,17 +665,17 @@ void ghostP()
             {
                 for (int z = 0; z < 25; z++)
                 {
-                    
+
                     if (pile[x][z] > 0)
                     {
-                        if (((y - z) < dist)&&(y > z))
+                        if (((y - z) < dist) && (y > z))
                         {
                             dist = y - z;
                         }
                     }
                     if (dist == 30)
                     {
-                        dist = y+1;
+                        dist = y + 1;
                     }
                 }
             }
@@ -675,9 +687,9 @@ void ghostP()
         {
             if (block[x][y] > 0)
             {
-                ghBoard[x][y-dist+1] = 9;
+                ghBoard[x][y - dist + 1] = 9;
             }
-            
+
         }
     }
     for (int y = 0; y <= 25; y++)
@@ -690,7 +702,7 @@ void ghostP()
             }
         }
     }
-            //Serial.println(dist);
+    //Serial.println(dist);
 }
 uint16_t XY(uint8_t x, uint8_t y)
 {
@@ -1184,11 +1196,11 @@ void loop()
     }
     else
     {
-        if (currentScore > 1)
+        if (currentScore > 0)
         {
             animationPaused();
         }
-        else
+        else if (currentScore == 0)
         {
             animationScroll();
         }
@@ -1206,15 +1218,19 @@ void rotate(bool turn)
     ySpin = 0;
     xOffset = 0;
     yOffset = 0;
-    int nRotation = currentRot;
+    nRotation = currentRot;
     cturn = turn;
     rotated = false;
-
-    if (turn = true)
+    if (pieceC == 2)//I fucked up programming long so I am just doing this than changing everything
+    {
+        turn = !(turn);
+        cturn = !(cturn);
+    }
+    if (turn == true)//left
     {
         nRotation++;
     }
-    else
+    else//right
     {
         nRotation--;
     }
@@ -1226,12 +1242,13 @@ void rotate(bool turn)
     {
         nRotation = 3;
     }
-
+    
     if (pieceC == 1)
     {//0 piece
         return;
     }
-
+    //Serial.println(currentRot);
+    //Serial.println(nRotation);
 
     for (int y = 0; y <= 25; y++)//Get the rotation points location
     {
@@ -1246,87 +1263,198 @@ void rotate(bool turn)
             newPlace[x][y] = 0;
         }
     }
-    if (pieceC == 2)
+    if (pieceC == 2)//long piece
     {
-        if ((nRotation = 0) && (!(rotated)))
+        /*if ((nRotation == 0) && (!(rotated)))
         {
-            xOffset = 0;
+            xOffset = 1;
             yOffset = 0;
+           // Serial.println("rot 0");
             rotOffSet(xOffset, yOffset);
         }
-        if ((nRotation = 1) && (!(rotated)))
+        if ((nRotation == 1) && (!(rotated)))
+        {
+            xOffset = 0;
+            yOffset = -1;
+           // Serial.println("rot 1");
+            rotOffSet(xOffset, yOffset);
+        }
+        if ((nRotation == 2) && (!(rotated)))
+        {
+            xOffset = -1;
+            yOffset = 0;
+           // Serial.println("rot 2");
+            rotOffSet(xOffset, yOffset);
+        }
+        if ((nRotation == 3) && (!(rotated)))
+        {
+            xOffset = 0;
+            yOffset = 1;
+           // Serial.println("rot 3");
+            rotOffSet(xOffset, yOffset);
+        }*/
+        
+        if((currentRot == 0) && (nRotation == 1) && !(rotated))//L
+        {
+            xOffset = 0;
+            yOffset = -1;
+            //Serial.println("to the left");
+            rotOffSet(xOffset, yOffset);
+            lineRot32or01();
+        }
+        if ((currentRot == 0) && (nRotation == 3) && !(rotated))//R
+        {
+            xOffset = -1;
+            yOffset = 0;
+            //Serial.println("to the right");
+            rotOffSet(xOffset, yOffset);
+            lineRot03or12();
+        }
+        if ((currentRot == 1) && (nRotation == 2) && !(rotated))//L
         {
             xOffset = -1;
             yOffset = 0;
             rotOffSet(xOffset, yOffset);
+            lineRot03or12();
         }
-        if ((nRotation = 2) && (!(rotated)))
+        if ((currentRot == 1) && (nRotation == 0) && !(rotated))//R
         {
-            xOffset = 1;
-            yOffset = 11;
+            xOffset =0;
+            yOffset = 1;
             rotOffSet(xOffset, yOffset);
+            lineRot23or10();
+            //lineRot0();
         }
-        if ((nRotation = 3) && (!(rotated)))
+        if ((currentRot == 2) && (nRotation == 3) && !(rotated))//L
         {
             xOffset = 0;
             yOffset = 1;
             rotOffSet(xOffset, yOffset);
+            lineRot23or10();
         }
+        if ((currentRot == 2) && (nRotation == 1) && !(rotated))//R
+        {
+            xOffset =1;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
+            lineRot30or21();
+        }
+        if ((currentRot == 3) && (nRotation == 0) && !(rotated))//L
+        {
+            xOffset = 1;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
+             lineRot30or21();
+            //lineRot0();
+        }
+        if ((currentRot == 3) && (nRotation == 2) && !(rotated))//R
+        {
+            xOffset =0;
+            yOffset = -1;
+            rotOffSet(xOffset, yOffset);
+            lineRot32or01();
+        }
+
+        if (!(rotated))//ground kick
+        {
+            xOffset = 0;
+            yOffset = 2;
+            rotOffSet(xOffset, yOffset);
+        }
+
         return;
     }
     rotOffSet(0, 0);
+   // Serial.println(nRotation);
 
-
-    if ((nRotation = 1) && (!(rotated)))
+    if ((nRotation == 1) && (!(rotated)))
     {
         xOffset = -1;
         yOffset = 0;
         rotOffSet(xOffset, yOffset);
+        //Serial.println(" 1 Test 1");
     }
-    else if ((nRotation = 1) && (!(rotated)))
+     if ((nRotation == 1) && (!(rotated)))
     {
         xOffset = -1;
         yOffset = -1;
         rotOffSet(xOffset, yOffset);
+       // Serial.println(" 1 Test 2");
     }
-    else if ((nRotation = 1) && (!(rotated)))
+     if ((nRotation == 1) && (!(rotated)))
     {
         xOffset = 0;
         yOffset = 2;
         rotOffSet(xOffset, yOffset);
+       // Serial.println(" 1 Test 3");
     }
-    else if ((nRotation = 1) && (!(rotated)))
+     if ((nRotation == 1) && (!(rotated)))
     {
         xOffset = -1;
         yOffset = 2;
         rotOffSet(xOffset, yOffset);
+       // Serial.println(" 1 Test 4");
     }
 
-    if ((nRotation = 3) && (!(rotated)))
+    if ((nRotation == 3) && (!(rotated)))
     {
         xOffset = 1;
         yOffset = 0;
         rotOffSet(xOffset, yOffset);
+        //Serial.println(" 2 Test 1");
     }
-    else if ((nRotation = 3) && (!(rotated)))
+     if ((nRotation == 3) && (!(rotated)))
     {
         xOffset = 1;
         yOffset = -1;
         rotOffSet(xOffset, yOffset);
+       // Serial.println(" 2 Test 2");
     }
-    else if ((nRotation = 3) && (!(rotated)))
+     if ((nRotation == 3) && (!(rotated)))
     {
         xOffset = 0;
         yOffset = 2;
         rotOffSet(xOffset, yOffset);
+        //Serial.println(" 2 Test 3");
     }
-    else if ((nRotation = 3) && (!(rotated)))
+     if ((nRotation == 3) && (!(rotated)))
     {
         xOffset = 1;
         yOffset = 2;
         rotOffSet(xOffset, yOffset);
+        //Serial.println(" 2 Test 4");
     }
-    if (!(rotated))
+
+    if ((nRotation == 2) && (!(rotated)))
+    {
+        xOffset = -1;
+        yOffset = 0;
+        rotOffSet(xOffset, yOffset);
+       // Serial.println(" 1 Test 4");
+    }
+    if ((nRotation == 2) && (!(rotated)))
+    {
+        xOffset = 1;
+        yOffset = 0;
+        rotOffSet(xOffset, yOffset);
+        //Serial.println(" 1 Test 4");
+    }
+
+    if ((nRotation == 0) && (!(rotated)))
+    {
+        xOffset = -1;
+        yOffset = 0;
+        rotOffSet(xOffset, yOffset);
+        //Serial.println(" 1 Test 4");
+    }
+    if ((nRotation == 0) && (!(rotated)))
+    {
+        xOffset = 1;
+        yOffset = 0;
+        rotOffSet(xOffset, yOffset);
+        //Serial.println(" 1 Test 4");
+    }
+    if (!(rotated))//ground kick
     {
         xOffset = 0;
         yOffset = 1;
@@ -1334,6 +1462,143 @@ void rotate(bool turn)
     }
 
 }
+void lineRot03or12 ()
+{
+    if(!(rotated))
+    {
+        Serial.println("we in bois");
+        if (!(rotated))
+        {
+            xOffset = -2;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
+           // Serial.println("Test 1");
+        }
+         if (!(rotated))
+        {
+            xOffset = 1;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
+           // Serial.println("Test 2");
+        }
+         if (!(rotated))
+        {
+            xOffset = -2;
+            yOffset = -1;
+            rotOffSet(xOffset, yOffset);
+           // Serial.println("Test 3");
+        }
+         if (!(rotated))
+        {
+            xOffset = 1;
+            yOffset = 2;
+            rotOffSet(xOffset, yOffset);
+            //Serial.println("Test 4");
+        }
+    }
+}
+void lineRot30or21 ()
+{
+    if (!(rotated))
+    {
+        Serial.println("Made it in");
+        if (!(rotated))
+        {
+            xOffset = 2;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
+           // Serial.println("Test 1");
+        }
+         if (!(rotated))
+        {
+            xOffset = -1;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
+           // Serial.println("Test 2");
+        }
+         if (!(rotated))
+        {
+            xOffset = 2;
+            yOffset = 1;
+            rotOffSet(xOffset, yOffset);
+            //Serial.println("Test 3");
+        }
+         if (!(rotated))
+        {
+            xOffset = -1;
+            yOffset = -2;
+            rotOffSet(xOffset, yOffset);
+           // Serial.println("Test 4");
+        }
+    }
+}
+void lineRot32or01 ()
+{
+    if (!(rotated))
+    {
+        //Serial.println("Made it in");
+        if (!(rotated))
+        {
+            xOffset = 1;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
+            //Serial.println("Test 1");
+        }
+         if (!(rotated))
+        {
+            xOffset = -2;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
+            //Serial.println("Test 2");
+        }
+         if (!(rotated))
+        {
+            xOffset = 1;
+            yOffset = 2;
+            rotOffSet(xOffset, yOffset);
+            //Serial.println("Test 3");
+        }
+         if (!(rotated))
+        {
+            xOffset = -2;
+            yOffset = -1;
+            rotOffSet(xOffset, yOffset);
+            //Serial.println("Test 4");
+        }
+    }
+}
+void lineRot23or10 ()
+{
+    if (!(rotated))
+    {
+        if (!(rotated))
+        {
+            xOffset = -1;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
+        }
+         if (!(rotated))
+        {
+            xOffset = 2;
+            yOffset = 0;
+            rotOffSet(xOffset, yOffset);
+        }
+         if (!(rotated))
+        {
+            xOffset = -1;
+            yOffset = -2;
+            rotOffSet(xOffset, yOffset);
+        }
+         if (!(rotated))
+        {
+            xOffset = -2;
+            yOffset = 1;
+            rotOffSet(xOffset, yOffset);
+        }
+    }
+}
+
+
 void rotOffSet(int H, int V)
 {
     int xRelative = 0;
@@ -1359,15 +1624,27 @@ void rotOffSet(int H, int V)
                 {
                     xT = 0 * xRelative + -1 * yRelative;
                     yT = 1 * xRelative + 0 * yRelative;
-                    newPlace[xT + xSpin + H][yT + ySpin + V] = block[x][y];
-
+                    if (((xT + xSpin + H) >= 0) && ((yT + ySpin + V) >= 0))
+                    {
+                        newPlace[xT + xSpin + H][yT + ySpin + V] = block[x][y];
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
                 else
                 {
                     xT = 0 * xRelative + 1 * yRelative;
                     yT = -1 * xRelative + 0 * yRelative;
-                    newPlace[xT + xSpin + H][yT + ySpin + V] = block[x][y];
-
+                    if (((xT + xSpin + H) >= 0) && ((yT + ySpin + V) >= 0))
+                    {
+                        newPlace[xT + xSpin + H][yT + ySpin + V] = block[x][y];
+                    }
+                    else
+                    {
+                        return;
+                    }
                 }
             }
         }
@@ -1417,6 +1694,7 @@ void placeRotation()
                 tPoint[x][y] = 0;
             }
         }
+        currentRot = nRotation;
         tPoint[xSpin + xOffset][ySpin + yOffset] = 1;
         for (int y = 0; y <= 25; y++)
         {
