@@ -41,7 +41,7 @@ long delayAnimationDeath = 0;
 long delayAnimationLineClear = 0;
 long delayNewBlock = 0;
 long delayPause = 0;
-
+long delayStick = 0;
 
 int delayLevel = 1000;
 int coolDown = 0;
@@ -73,6 +73,8 @@ bool stickyRight = true;
 bool stickyHold = true;
 bool stickyDrop = true;
 bool stickyHeld = true;
+bool latchLeft = true;
+bool latchRight = true;
 bool firstHeld = true;
 bool stickyStart = true;
 
@@ -284,13 +286,31 @@ bool stick()
     }
     if (digitalRead(joyLeft) == LOW)
     {
+        if (latchLeft)
+        {
+            latchLeft = !(latchLeft);
+            delayStick = millis() - 1;
+        }
         moveLeft();
         return true;
+    }
+    if (digitalRead(joyLeft) == HIGH)
+    {
+        latchLeft = true;
     }
     if (digitalRead(joyRight) == LOW)
     {
         moveRight();
         return true;
+    }
+    if (digitalRead(joyRight) == HIGH)
+    {
+        if (latchRight)
+        {
+            latchRight = !(latchRight);
+            delayStick = millis() - 1;
+        }
+        latchRight = true;
     }
     if (digitalRead(joyDown) == LOW)
     {
@@ -407,7 +427,7 @@ bool moveDown(bool stickk)
 void moveLeft()
 {
     ghostP();
-    if (canLeft())
+    if (canLeft() && delayStick < millis())
     {
         int t = 0;
         for (int x = 9; x >= 0; x--)
@@ -431,12 +451,13 @@ void moveLeft()
                 }
             }
         }
+        delayStick = millis() + (delayLevel / 5);
     }
 }
 void moveRight()
 {
     ghostP();
-    if (canRight())
+    if (canRight() && delayStick<millis())
     {
         int r = 0;
         for (int x = 0; x <= 9; x++)
@@ -459,6 +480,7 @@ void moveRight()
                 }
             }
         }
+        delayStick = millis() + (delayLevel/5);
     }
 }
 void hardDrop()
